@@ -1,0 +1,111 @@
+@model TBH_DMT.Web.Models.ViewModels.BaoCaoThamSoViewModel
+@using System.Web.Helpers
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = Model.ReportTitle;
+    ViewBag.PageTitle = Model.ReportTitle;
+    var cttvJson = HttpUtility.JavaScriptStringEncode(Json.Encode(Model.CttvOptions), true);
+    var currentYear = DateTime.Now.Year;
+}
+@section Styles {
+    <link rel="stylesheet" href="@Url.Content("~/Content/hieuquadon/search.css?v=20260914a")" />
+}
+
+<main class="app-page page-shell">
+    <section class="feature-card search-card" aria-labelledby="bc-title">
+        <div class="section-head">
+            <span class="search-mark" aria-hidden="true"></span>
+            <h2 id="bc-title">Nhập tham số chạy báo cáo — @Model.ReportTitle</h2>
+        </div>
+
+        <div class="bc-dev-banner" role="status">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" /></svg>
+            <span>Báo cáo <strong>@Model.ReportTitle</strong> đang trong quá trình phát triển. Bạn có thể xem trước tham số nhưng chưa xuất được báo cáo thật ở phiên bản này.</span>
+        </div>
+
+        <form id="bc-params-form" novalidate>
+            @Html.AntiForgeryToken()
+            <div id="bc-params" class="search-grid">
+                <div class="field field-cttv custom-select-wrap">
+                    <label id="bc-cttv-title">Công ty thành viên <small>(chọn 1+)</small></label>
+                    <button type="button" id="bc-cttv-btn" class="input-control select-button" aria-labelledby="bc-cttv-title bc-cttv-label" aria-controls="bc-cttv-drop" aria-expanded="false">
+                        <span id="bc-cttv-label">-- Tất cả CTTV --</span><span aria-hidden="true">⌄</span>
+                    </button>
+                    <div id="bc-cttv-drop" class="custom-menu" hidden>
+                        <div class="menu-search"><input id="bc-cttv-search" type="search" placeholder="Gõ tên công ty để lọc..." /></div>
+                        <div id="bc-cttv-list" class="menu-list"></div>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(Model.CttvLookupError))
+                    {
+                        <span class="lookup-error">@Model.CttvLookupError</span>
+                    }
+                </div>
+
+                <div class="field field-ri">
+                    <label for="bc-riclass">Nghiệp vụ <span id="bc-riclass-required-mark" class="required">*</span></label>
+                    <select id="bc-riclass" class="input-control" aria-describedby="bc-riclass-error" required>
+                        <option value="" disabled selected>-- Chọn nghiệp vụ --</option>
+                        <option value="Fire">Fire</option><option value="Hull">Hull</option>
+                        <option value="Engineering">Engineering</option><option value="Cargo">Cargo</option>
+                        <option value="Miscellaneous">Miscellaneous</option>
+                    </select>
+                    <div id="bc-riclass-error" class="validation-error" role="alert" hidden>Vui lòng chọn Nghiệp vụ</div>
+                </div>
+
+                <div class="date-grid" style="grid-column:1/-1">
+                    <div class="field"><label for="bc-year">Năm <span class="required">*</span></label>
+                        <select id="bc-year" class="input-control"><option value="">-- Chọn năm --</option>@for (var year = currentYear; year >= currentYear - 4; year--){<option value="@year">@year</option>}</select>
+                    </div>
+                    <div class="field"><label for="bc-quarter">Quý</label>
+                        <select id="bc-quarter" class="input-control"><option value="">Cả năm</option><option value="1">Quý 1</option><option value="2">Quý 2</option><option value="3">Quý 3</option><option value="4">Quý 4</option></select>
+                    </div>
+                    <div class="field hqd-date-field"><label for="bc-from-display">Từ ngày <span id="bc-from-required-mark" class="required">*</span></label>
+                        <div class="hqd-date-control">
+                            <input id="bc-from-display" type="text" class="input-control hqd-date-display" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="bc-from-error" required />
+                            <input id="bc-from" type="date" class="hqd-date-picker" min="1900-01-01" max="9999-12-31" aria-label="Chọn Từ ngày bằng lịch" />
+                        </div>
+                    </div>
+                    <div class="field hqd-date-field"><label for="bc-to-display">Đến ngày</label>
+                        <div class="hqd-date-control">
+                            <input id="bc-to-display" type="text" class="input-control hqd-date-display" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" spellcheck="false" />
+                            <input id="bc-to" type="date" class="hqd-date-picker" min="1900-01-01" max="9999-12-31" aria-label="Chọn Đến ngày bằng lịch" />
+                        </div>
+                    </div>
+                    <div id="bc-from-error" class="validation-error" role="alert" aria-live="assertive" hidden>Vui lòng chọn Năm và Từ ngày</div>
+                </div>
+
+                <div class="date-grid" style="grid-column:1/-1">
+                    <div class="field hqd-date-field"><label for="bc-enter-from-display">Ngày nhập đơn - Từ ngày</label>
+                        <div class="hqd-date-control">
+                            <input id="bc-enter-from-display" type="text" class="input-control hqd-date-display" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" spellcheck="false" />
+                            <input id="bc-enter-from" type="date" class="hqd-date-picker" min="1900-01-01" max="9999-12-31" aria-label="Chọn ngày nhập đơn - Từ ngày bằng lịch" />
+                        </div>
+                    </div>
+                    <div class="field hqd-date-field"><label for="bc-enter-to-display">Ngày nhập đơn - Đến ngày</label>
+                        <div class="hqd-date-control">
+                            <input id="bc-enter-to-display" type="text" class="input-control hqd-date-display" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" spellcheck="false" />
+                            <input id="bc-enter-to" type="date" class="hqd-date-picker" min="1900-01-01" max="9999-12-31" aria-label="Chọn ngày nhập đơn - Đến ngày bằng lịch" />
+                        </div>
+                    </div>
+                    <div class="field-help date-help">Lọc theo ngày đơn được nhập vào hệ thống (enter_date), độc lập với khoảng "Từ ngày/Đến ngày" hiệu lực ở trên.</div>
+                </div>
+            </div>
+
+            <div class="action-bar-wrap">
+                <div class="action-bar">
+                    <button type="button" id="bc-reset-btn" class="bv-btn secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 4v6h6" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>Đặt lại bộ lọc</button>
+                    <button type="submit" id="bc-export-btn" class="bv-btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><path d="M14 2v6h6" /><path d="M8 13h2M8 17h2M12 13h2M12 17h2" /></svg>Xuất báo cáo</button>
+                </div>
+            </div>
+        </form>
+    </section>
+</main>
+
+<script>
+    window.TBH_BAO_CAO = {
+        reportKey: @Html.Raw(Json.Encode(Model.ReportKey)),
+        reportTitle: @Html.Raw(Json.Encode(Model.ReportTitle)),
+        cttvOptions: JSON.parse(@Html.Raw(cttvJson))
+    };
+</script>
+<script src="@Url.Content("~/Scripts/baocao/baocao.js?v=20260910a")"></script>

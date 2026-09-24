@@ -1,0 +1,223 @@
+@model TBH_DMT.Web.Models.ViewModels.BaoCaoThamSoViewModel
+@using System.Web.Helpers
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = Model.ReportTitle;
+    ViewBag.PageTitle = Model.ReportTitle;
+    ViewBag.HidePageHeader = false;
+    var cttvJson = HttpUtility.JavaScriptStringEncode(Json.Encode(Model.CttvOptions), true);
+    var currentYear = DateTime.Now.Year;
+    var hasFirePermission = ViewBag.HasFirePermission == true;
+}
+@section Styles {
+    <link rel="stylesheet" href="@Url.Content("~/Content/baocao/premium-borderaux.css?v=20260915g")" />
+}
+
+<div class="bc-premium-page">
+    <section class="bc-report-card" aria-labelledby="bc-paid-panel-title">
+        <div class="bc-report-head">
+            <span class="bc-report-head-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M7 10h10M7 14h4" /></svg>
+            </span>
+            <div>
+                <h1 id="bc-paid-panel-title">Nhập tham số chạy báo cáo</h1>
+                <p>Chọn phạm vi, kỳ báo cáo và kỳ ghi nhận bồi thường.</p>
+            </div>
+        </div>
+
+        @if (!hasFirePermission)
+        {
+            <div class="bc-no-permission">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 9v4M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
+                <p>Bạn chưa được phân quyền nghiệp vụ <strong>Fire</strong> cho báo cáo Paid Borderaux.</p>
+                <p>Vui lòng liên hệ Quản trị viên hệ thống để được cấp quyền truy cập.</p>
+            </div>
+        }
+        else
+        {
+        <form id="bc-paid-form" novalidate>
+            @Html.AntiForgeryToken()
+
+            <div class="bc-zone">
+                <div class="bc-zone-head">
+                    <span class="bc-zone-badge-num">1</span>
+                    <span class="bc-zone-label-text">Đối tượng &amp; Nghiệp vụ</span>
+                    <span class="bc-zone-divider-line"></span>
+                </div>
+                <div class="bc-row bc-scope-row">
+                    <div class="bc-field bc-cttv-field bc-width-cttv">
+                        <div class="bc-label-row">
+                            <label id="bc-paid-cttv-title" for="bc-paid-cttv-btn">Công ty thành viên</label>
+                            <span class="bc-choice-badge">Chọn 1+</span>
+                        </div>
+                        <button type="button" id="bc-paid-cttv-btn" class="bc-control bc-select-button bc-has-prefix" aria-labelledby="bc-paid-cttv-title bc-paid-cttv-label" aria-controls="bc-paid-cttv-drop" aria-expanded="false" aria-haspopup="listbox">
+                            <svg class="bc-prefix-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="9" y="3" width="6" height="4" rx="1" /><rect x="3" y="17" width="6" height="4" rx="1" /><rect x="15" y="17" width="6" height="4" rx="1" /><path d="M12 7v5M6 17v-5h12v5" /></svg>
+                            <span id="bc-paid-cttv-label">Tất cả CTTV</span>
+                            <svg class="bc-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m1 1 4 4 4-4" /></svg>
+                        </button>
+                        <div id="bc-paid-cttv-drop" class="bc-custom-menu" hidden>
+                            <div class="bc-menu-search">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+                                <input id="bc-paid-cttv-search" type="search" placeholder="Gõ tên công ty để lọc..." aria-label="Lọc danh sách Công ty thành viên" />
+                            </div>
+                            <div id="bc-paid-cttv-list" class="bc-menu-list" role="listbox" aria-multiselectable="true"></div>
+                        </div>
+                        <div id="bc-paid-cttv-chips" class="bc-chip-list" aria-live="polite"></div>
+                        @if (!string.IsNullOrWhiteSpace(Model.CttvLookupError))
+                        {
+                            <span class="bc-lookup-error">@Model.CttvLookupError</span>
+                        }
+                    </div>
+
+                    <div class="bc-field bc-width-lob">
+                        <label for="bc-paid-riclass">Nghiệp vụ</label>
+                        <div class="bc-control-wrap bc-has-prefix">
+                            <svg class="bc-prefix-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 20 6v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-3z" /><path d="m9 12 2 2 4-4" /></svg>
+                            <select id="bc-paid-riclass" class="bc-control">
+                                <option value="Fire" selected>Fire</option>
+                                <option value="Hull" disabled>Hull (chưa hỗ trợ)</option>
+                                <option value="Engineering" disabled>Engineering (chưa hỗ trợ)</option>
+                                <option value="Cargo" disabled>Cargo (chưa hỗ trợ)</option>
+                                <option value="Miscellaneous" disabled>Miscellaneous (chưa hỗ trợ)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="bc-lob-help">
+                        <span>Chọn <b>Tất cả CTTV</b> nếu muốn lọc toàn bộ Công ty thành viên theo 01 nghiệp vụ.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bc-zone">
+                <div class="bc-zone-head">
+                    <span class="bc-zone-badge-num">2</span>
+                    <span class="bc-zone-label-text">Kỳ báo cáo</span>
+                    <span class="bc-zone-divider-line"></span>
+                </div>
+                <div class="bc-row bc-period-row">
+                    <div class="bc-field bc-width-year">
+                        <label for="bc-paid-year">Năm <span class="bc-required">*</span></label>
+                        <select id="bc-paid-year" class="bc-control" required aria-describedby="bc-paid-year-error">
+                            <option value="">-- Chọn --</option>
+                            @for (var year = currentYear; year >= currentYear - 10; year--)
+                            {
+                                if (year == currentYear)
+                                {
+                                    <option value="@year" selected="selected">@year</option>
+                                }
+                                else
+                                {
+                                    <option value="@year">@year</option>
+                                }
+                            }
+                        </select>
+                        <span id="bc-paid-year-error" class="bc-validation-error" role="alert" hidden>Vui lòng chọn Năm</span>
+                    </div>
+                    <div class="bc-field bc-width-quarter">
+                        <label for="bc-paid-quarter">Quý <span class="bc-optional">(tùy chọn)</span></label>
+                        <select id="bc-paid-quarter" class="bc-control" aria-describedby="bc-paid-quarter-error">
+                            <option value="" selected>Cả năm</option><option value="1">Quý 1</option><option value="2">Quý 2</option><option value="3">Quý 3</option><option value="4">Quý 4</option>
+                        </select>
+                        <span id="bc-paid-quarter-error" class="bc-validation-error" role="alert" hidden>Vui lòng chọn Quý — báo cáo chỉ chạy theo quý</span>
+                    </div>
+                    <div class="bc-field bc-date-field bc-width-date">
+                        <label for="bc-paid-from-display">Từ ngày <span class="bc-required">*</span><span id="bc-paid-from-lock" class="bc-lock-chip" hidden>Tự động</span></label>
+                        <div class="bc-date-control">
+                            <input id="bc-paid-from-display" type="text" class="bc-control bc-date-display" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" spellcheck="false" required aria-describedby="bc-paid-from-error" />
+                            <input id="bc-paid-from" type="date" class="bc-date-picker" min="1900-01-01" max="9999-12-31" tabindex="-1" aria-label="Chọn Từ ngày bằng lịch" />
+                            <svg class="bc-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18" /></svg>
+                        </div>
+                        <span id="bc-paid-from-error" class="bc-validation-error" role="alert" hidden>Vui lòng nhập Từ ngày hợp lệ</span>
+                    </div>
+                    <div class="bc-field bc-date-field bc-width-date">
+                        <label for="bc-paid-to-display">Đến ngày <span class="bc-required">*</span><span id="bc-paid-to-lock" class="bc-lock-chip" hidden>Tự động</span></label>
+                        <div class="bc-date-control">
+                            <input id="bc-paid-to-display" type="text" class="bc-control bc-date-display" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" spellcheck="false" required aria-describedby="bc-paid-to-error" />
+                            <input id="bc-paid-to" type="date" class="bc-date-picker" min="1900-01-01" max="9999-12-31" tabindex="-1" aria-label="Chọn Đến ngày bằng lịch" />
+                            <svg class="bc-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18" /></svg>
+                        </div>
+                        <span id="bc-paid-to-error" class="bc-validation-error" role="alert" hidden>Vui lòng nhập Đến ngày hợp lệ</span>
+                    </div>
+                    <div class="bc-help-right">
+                        <p class="bc-field-help">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7h.01" /></svg>
+                            <span>Chọn Năm và Quý (tùy chọn) — hệ thống tự điền Từ/Đến ngày. Hoặc gõ trực tiếp vào ô ngày để nhập khoảng thời gian khác.</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="bc-preset-row" aria-label="Chọn nhanh kỳ báo cáo">
+                    <span class="bc-preset-label">Phím tắt:</span>
+                    <button type="button" class="bc-preset-chip" data-preset="current-quarter">Quý này</button>
+                    <button type="button" class="bc-preset-chip active" data-preset="current-year">Năm nay</button>
+                    <button type="button" class="bc-preset-chip" data-preset="previous-year">Năm trước</button>
+                    <span class="bc-preset-divider" aria-hidden="true">·</span>
+                    <button type="button" class="bc-preset-chip bc-preset-relative" data-preset="last-six-months">6 tháng gần nhất</button>
+                    <button type="button" class="bc-preset-chip bc-preset-relative" data-preset="last-twelve-months">12 tháng gần nhất</button>
+                </div>
+                <span id="bc-paid-period-error" class="bc-validation-error bc-row-error" role="alert" hidden>Từ ngày không được lớn hơn Đến ngày</span>
+            </div>
+
+            <div class="bc-zone">
+                <div class="bc-zone-head">
+                    <span class="bc-zone-badge-num">3</span>
+                    <span class="bc-zone-label-text">Kỳ ghi nhận bồi thường</span>
+                    <span class="bc-zone-divider-line"></span>
+                </div>
+                <div class="bc-row bc-enter-row">
+                    <div class="bc-field bc-date-field bc-width-date">
+                        <label for="bc-paid-accounting-from-display">Từ ngày <span class="bc-required">*</span></label>
+                        <div class="bc-date-control">
+                            <input id="bc-paid-accounting-from-display" type="text" class="bc-control bc-date-display" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" spellcheck="false" required aria-describedby="bc-paid-accounting-from-error" />
+                            <input id="bc-paid-accounting-from" type="date" class="bc-date-picker" min="1900-01-01" max="9999-12-31" tabindex="-1" aria-label="Chọn Kỳ ghi nhận - Từ ngày bằng lịch" />
+                            <svg class="bc-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18" /></svg>
+                        </div>
+                        <span id="bc-paid-accounting-from-error" class="bc-validation-error" role="alert" hidden>Vui lòng nhập Từ ngày hợp lệ</span>
+                    </div>
+                    <div class="bc-field bc-date-field bc-width-date">
+                        <label for="bc-paid-accounting-to-display">Đến ngày <span class="bc-required">*</span></label>
+                        <div class="bc-date-control">
+                            <input id="bc-paid-accounting-to-display" type="text" class="bc-control bc-date-display" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" spellcheck="false" required aria-describedby="bc-paid-accounting-to-error" />
+                            <input id="bc-paid-accounting-to" type="date" class="bc-date-picker" min="1900-01-01" max="9999-12-31" tabindex="-1" aria-label="Chọn Kỳ ghi nhận - Đến ngày bằng lịch" />
+                            <svg class="bc-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18" /></svg>
+                        </div>
+                        <span id="bc-paid-accounting-to-error" class="bc-validation-error" role="alert" hidden>Vui lòng nhập Đến ngày hợp lệ</span>
+                    </div>
+                    <div class="bc-help-right">
+                        <p class="bc-field-help">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7h.01" /></svg>
+                            <span>Lọc theo kỳ ghi nhận/hạch toán của giao dịch bồi thường, độc lập với kỳ hiệu lực ở mục 2. Hệ thống sử dụng tháng và năm của hai ngày đã nhập. Không giới hạn độ rộng kỳ ghi nhận (bồi thường có thể kéo dài nhiều năm).</span>
+                        </p>
+                    </div>
+                </div>
+                <span id="bc-paid-accounting-range-error" class="bc-validation-error" role="alert" hidden>Ngày ghi nhận bồi thường - Từ ngày không được lớn hơn Đến ngày</span>
+            </div>
+
+            <div class="bc-action-bar">
+                <button type="button" id="bc-paid-reset-btn" class="bc-button bc-button-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 4v6h6" /><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10" /></svg><span>Đặt lại bộ lọc</span></button>
+                <button type="submit" id="bc-paid-export-btn" class="bc-button bc-button-export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M12 12v6M9 15l3 3 3-3" /></svg><span>Xuất Excel</span></button>
+            </div>
+        </form>
+        }
+    </section>
+</div>
+
+@if (hasFirePermission)
+{
+<script>
+    window.TBH_PAID_BORDERAUX = {
+        reportKey: @Html.Raw(Json.Encode(Model.ReportKey)),
+        reportTitle: @Html.Raw(Json.Encode(Model.ReportTitle)),
+        currentYear: @currentYear,
+        cttvOptions: JSON.parse(@Html.Raw(cttvJson)),
+        urls: {
+            start: @Html.Raw(Json.Encode(Url.Action("StartFirePaidBrExport", "BaoCao"))),
+            status: @Html.Raw(Json.Encode(Url.Action("GetFirePaidBrStatus", "BaoCao"))),
+            latest: @Html.Raw(Json.Encode(Url.Action("GetLatestFirePaidBrJob", "BaoCao"))),
+            cancel: @Html.Raw(Json.Encode(Url.Action("CancelFirePaidBrExport", "BaoCao"))),
+            download: @Html.Raw(Json.Encode(Url.Action("DownloadFirePaidBrExcel", "BaoCao")))
+        }
+    };
+</script>
+<script src="@Url.Content("~/Scripts/hieuquadon/operation-timer.js?v=20260910a")"></script>
+<script src="@Url.Content("~/Scripts/baocao/paid-borderaux.js?v=20260920b")"></script>
+}

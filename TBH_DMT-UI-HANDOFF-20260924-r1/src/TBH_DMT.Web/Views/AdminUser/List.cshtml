@@ -1,0 +1,87 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Quản lý người dùng";
+    ViewBag.PageTitle = "Quản lý người dùng";
+}
+@section Styles {
+    <link rel="stylesheet" href="@Url.Content("~/Content/admin/admin.css?v=20260913a")" />
+}
+
+<section id="user-admin-page" class="app-page admin-page" data-list-url="@Url.Action("GetList", "AdminUser")"
+         data-add-url="@Url.Action("Add", "AdminUser")" data-update-url="@Url.Action("Update", "AdminUser")"
+         data-lock-url="@Url.Action("Lock", "AdminUser")" data-unlock-url="@Url.Action("Unlock", "AdminUser")"
+         data-reset-url="@Url.Action("ResetPassword", "AdminUser")" data-current-user="@User.Identity.Name">
+    <div class="anti-forgery" hidden>@Html.AntiForgeryToken()</div>
+<div class="app-stat-grid user-stats">
+        <article class="app-stat-card user-stat blue"><span class="app-stat-label">Tổng tài khoản</span><strong id="stat-total-users" class="app-stat-value">0</strong></article>
+        <article class="app-stat-card user-stat green success"><span class="app-stat-label">Đang hoạt động</span><strong id="stat-active-users" class="app-stat-value">0</strong></article>
+        <article class="app-stat-card user-stat red danger"><span class="app-stat-label">Bị khóa</span><strong id="stat-locked-users" class="app-stat-value">0</strong></article>
+    </div>
+    <section class="app-section" aria-labelledby="user-list-title">
+        <div class="app-section-heading admin-toolbar">
+            <h2 id="user-list-title" class="app-section-title">Danh sách tài khoản</h2>
+            <button id="add-user-btn" type="button" class="admin-btn success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="8.5" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="23" y1="11" x2="17" y2="11" /></svg>Thêm người dùng</button>
+        </div>
+        <div id="user-list-message" class="admin-alert" role="alert" aria-live="assertive" hidden></div>
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead><tr><th>#</th><th>Username</th><th>Họ tên</th><th>Email</th><th>Vai trò</th><th>Phân quyền nhóm</th><th>Trạng thái</th><th>Đăng nhập cuối</th><th>Thao tác</th></tr></thead>
+                <tbody id="user-table-body"><tr><td colspan="9" class="empty-cell">Đang tải...</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+</section>
+
+<div id="user-modal" class="admin-modal" hidden>
+    <div class="admin-modal-dialog wide" role="dialog" aria-modal="true" aria-labelledby="user-modal-title">
+        <header><strong id="user-modal-title">Thêm người dùng mới</strong><button type="button" class="modal-close" data-close-modal="user-modal" aria-label="Đóng hộp thoại thêm người dùng">×</button></header>
+        <form id="user-form" class="admin-modal-body" novalidate>
+            <input id="user-id" name="UserId" type="hidden" />
+            <input id="user-status" name="Status" type="hidden" value="ACTIVE" />
+            <input id="user-department" name="Department" type="hidden" />
+            <div class="admin-grid two">
+                <label class="admin-field"><span>Username</span><input id="user-username" name="Username" type="text" /></label>
+                <label class="admin-field"><span>Họ tên</span><input id="user-full-name" name="FullName" type="text" /></label>
+                <label class="admin-field"><span>Email</span><input id="user-email" name="Email" type="email" /></label>
+                <label class="admin-field"><span>Vai trò</span><select id="user-role" name="RoleCode"><option value="EDITOR">Editor</option><option value="VIEWER">Viewer</option><option value="ADMIN">Admin</option></select></label>
+                <div id="initial-password-field" class="admin-field"><label for="user-password">Mật khẩu ban đầu</label><span class="password-control"><input id="user-password" name="Password" type="password" autocomplete="new-password" aria-describedby="user-password-rule user-password-caps" minlength="6" required /><button type="button" class="password-toggle" data-password-target="user-password" aria-label="Hiện mật khẩu" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" /><circle cx="12" cy="12" r="3" /></svg></button></span><small id="user-password-rule" class="password-hint">Ít nhất 6 ký tự.</small><small id="user-password-caps" class="password-hint warning" role="status" hidden>Caps Lock đang bật.</small></div>
+            </div>
+            <fieldset class="permission-box">
+                <legend>Phân quyền truy cập nhóm chức năng</legend>
+                <p id="permission-hint">Chọn các nhóm chức năng user được phép truy cập</p>
+                <div class="permission-grid">
+                    <label><input type="checkbox" name="GroupCodes" value="main" /> 🧮 Công cụ</label>
+                    <label><input type="checkbox" name="GroupCodes" value="fire" /> 🔥 Cháy</label>
+                    <label><input type="checkbox" name="GroupCodes" value="engineering" /> 🏗️ Kỹ thuật</label>
+                    <label><input type="checkbox" name="GroupCodes" value="cargo" /> 🚢 Hàng hóa</label>
+                    <label><input type="checkbox" name="GroupCodes" value="hull" /> ⚓ Tàu</label>
+                    <label><input type="checkbox" name="GroupCodes" value="misc" /> 📋 Hỗn hợp</label>
+                </div>
+            </fieldset>
+            <div id="user-form-message" class="admin-alert error" role="alert" aria-live="assertive" hidden></div>
+            <footer><button type="button" class="admin-btn secondary" data-close-modal="user-modal">Đóng</button><button id="save-user-btn" type="submit" class="admin-btn primary">Lưu thay đổi</button></footer>
+        </form>
+    </div>
+</div>
+
+<div id="reset-modal" class="admin-modal" hidden>
+    <div class="admin-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reset-modal-title">
+        <header><strong id="reset-modal-title">Đặt lại mật khẩu</strong><button type="button" class="modal-close" data-close-modal="reset-modal" aria-label="Đóng hộp thoại đặt lại mật khẩu">×</button></header>
+        <form id="reset-form" class="admin-modal-body" novalidate>
+            <input id="reset-user-id" name="UserId" type="hidden" />
+            <div class="admin-field"><label for="reset-password">Mật khẩu mới</label><span class="password-control"><input id="reset-password" name="NewPassword" type="password" autocomplete="new-password" aria-describedby="reset-password-rule reset-password-caps" minlength="6" required /><button type="button" class="password-toggle" data-password-target="reset-password" aria-label="Hiện mật khẩu" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" /><circle cx="12" cy="12" r="3" /></svg></button></span><small id="reset-password-rule" class="password-hint">Ít nhất 6 ký tự.</small><small id="reset-password-caps" class="password-hint warning" role="status" hidden>Caps Lock đang bật.</small></div>
+            <div id="reset-message" class="admin-alert error" role="alert" aria-live="assertive" hidden></div>
+            <footer><button type="button" class="admin-btn secondary" data-close-modal="reset-modal">Hủy</button><button type="submit" class="admin-btn primary">Đặt lại mật khẩu</button></footer>
+        </form>
+    </div>
+</div>
+
+<div id="lock-modal" class="admin-modal" hidden>
+    <div class="admin-modal-dialog confirm" role="dialog" aria-modal="true" aria-labelledby="lock-message">
+        <div class="admin-modal-body"><p id="lock-message">Bạn có chắc chắn muốn khóa tài khoản này?</p><footer><button type="button" class="admin-btn secondary" data-close-modal="lock-modal">Hủy</button><button id="confirm-lock-btn" type="button" class="admin-btn danger">Xác nhận</button></footer></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="@Url.Content("~/Scripts/admin/user-list.js?v=20260906a")"></script>
+}

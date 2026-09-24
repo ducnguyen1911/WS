@@ -1,0 +1,42 @@
+@using System.Collections.Generic
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Nhật ký hệ thống";
+    ViewBag.PageTitle = "Nhật ký hệ thống";
+    var usernames = ViewBag.Usernames as IList<string> ?? new List<string>();
+}
+@section Styles {
+    <link rel="stylesheet" href="@Url.Content("~/Content/admin/admin.css?v=20260913a")" />
+}
+
+<section id="audit-page" class="app-page admin-page" data-list-url="@Url.Action("GetList", "AuditLog")">
+<section class="app-section" aria-labelledby="audit-list-title">
+        <h2 id="audit-list-title" class="app-section-title audit-section-title">Bộ lọc và danh sách hoạt động</h2>
+        <div class="app-surface app-toolbar-surface admin-toolbar audit-toolbar">
+            <div class="audit-filters">
+                <label for="audit-user">Người dùng:
+                    <select id="audit-user"><option value="">Tất cả</option>@foreach (var username in usernames) { <option value="@username">@username</option> }</select>
+                </label>
+                <label for="audit-action">Hành động:
+                    <select id="audit-action"><option value="">Tất cả</option><option value="login">Đăng nhập</option><option value="logout">Đăng xuất</option><option value="view">Xem</option><option value="edit">Chỉnh sửa</option><option value="create">Thêm mới</option><option value="delete">Xóa</option><option value="export">Xuất file</option><option value="confirm">Xác nhận</option></select>
+                </label>
+                <label for="audit-from">Từ ngày: <input id="audit-from" type="date" /></label>
+                <label for="audit-to">Đến ngày: <input id="audit-to" type="date" /></label>
+            </div>
+            <div class="audit-actions"><span id="audit-count" role="status" aria-live="polite">0 bản ghi</span><button id="export-audit-btn" type="button" class="admin-btn secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>Xuất Excel</button></div>
+        </div>
+        @if (ViewBag.UserLookupError != null) { <div class="admin-alert warning">@ViewBag.UserLookupError</div> }
+        <div id="audit-message" class="admin-alert" role="alert" aria-live="assertive" hidden></div>
+        <div class="admin-table-wrap audit-table-wrap">
+            <table class="admin-table" aria-describedby="audit-count">
+                <thead><tr><th>Thời gian</th><th>Người dùng</th><th>Hành động</th><th>Chi tiết</th><th>IP</th></tr></thead>
+                <tbody id="audit-table-body"><tr><td colspan="5" class="empty-cell">Đang tải...</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+</section>
+
+@section Scripts {
+    <script src="@Url.Content("~/Scripts/vendor/xlsx.full.min.js?v=20260903")"></script>
+    <script src="@Url.Content("~/Scripts/admin/audit-log.js?v=20260906a")"></script>
+}

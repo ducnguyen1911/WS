@@ -1,0 +1,101 @@
+@model TBH_DMT.Web.Models.ViewModels.HomeViewModel
+@using System
+@using System.Collections.Generic
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Trang chủ";
+    ViewBag.PageTitle = "Trang chủ";
+    var actionLabels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        { "login", "Đăng nhập" },
+        { "logout", "Đăng xuất" },
+        { "view", "Xem" },
+        { "edit", "Chỉnh sửa" },
+        { "create", "Thêm mới" },
+        { "delete", "Xóa" },
+        { "export", "Xuất file" },
+        { "confirm", "Xác nhận" }
+    };
+}
+@section Styles {
+    <link rel="stylesheet" href="@Url.Content("~/Content/admin/admin.css?v=20260913a")" />
+    <link rel="stylesheet" href="@Url.Content("~/Content/home.css?v=20260909a")" />
+}
+
+<section class="app-page home-page">
+@if (!string.IsNullOrWhiteSpace(Model.DataErrorMessage))
+    {
+        <div class="home-alert" role="status">@Model.DataErrorMessage</div>
+    }
+
+    <div class="app-stat-grid home-kpi-grid" aria-label="Thống kê tính hiệu quả 7 ngày qua">
+        <article class="app-stat-card kpi-card">
+            <div class="app-stat-label kpi-label">Số lần tính hiệu quả</div>
+            <div class="app-stat-note kpi-period">7 ngày qua</div>
+            <div class="app-stat-value kpi-value">@Model.HqStats.SoLanTinh.ToString("N0")</div>
+        </article>
+        <article class="app-stat-card kpi-card">
+            <div class="app-stat-label kpi-label">Tổng số đơn đã tính</div>
+            <div class="app-stat-note kpi-period">7 ngày qua</div>
+            <div class="app-stat-value kpi-value">@Model.HqStats.TongSoDong.ToString("N0")</div>
+        </article>
+    </div>
+
+    <section class="app-section home-section" aria-labelledby="home-tools-title">
+        <h2 id="home-tools-title" class="app-section-title home-section-title">Công cụ</h2>
+        <div class="launch-card-grid">
+            <a class="launch-card" href="@Url.Action("Search", "HieuQuaDon")">
+                <svg class="launch-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2" /><line x1="8" y1="6" x2="16" y2="6" /><line x1="8" y1="10" x2="16" y2="10" /><line x1="8" y1="14" x2="12" y2="14" /></svg>
+                <span class="launch-card-label">Hiệu quả nghiệp vụ tái</span>
+            </a>
+            @if (Model.IsAdmin)
+            {
+                <a class="launch-card" href="@Url.Action("List", "AdminUser")">
+                    <svg class="launch-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" /></svg>
+                    <span class="launch-card-label">Quản lý người dùng</span>
+                </a>
+                <a class="launch-card" href="@Url.Action("List", "AuditLog")">
+                    <svg class="launch-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><path d="M14 2v6h6" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
+                    <span class="launch-card-label">Nhật ký hệ thống</span>
+                </a>
+            }
+            <a class="launch-card" href="@Url.Action("ChangePassword", "Account")">
+                <svg class="launch-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
+                <span class="launch-card-label">Đổi mật khẩu</span>
+            </a>
+        </div>
+    </section>
+
+    <section class="app-section home-section" aria-labelledby="recent-activity-title">
+        <h2 id="recent-activity-title" class="app-section-title home-section-title">Hoạt động gần đây</h2>
+        <div class="home-table-wrap">
+            <table class="admin-table home-activity-table">
+                <thead>
+                    <tr><th>Thời gian</th><th>Người dùng</th><th>Hành động</th><th>Chi tiết</th></tr>
+                </thead>
+                <tbody>
+                    @if (Model.RecentActivity.Count == 0)
+                    {
+                        <tr><td colspan="4" class="empty-cell">Chưa có hoạt động nào gần đây</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var row in Model.RecentActivity)
+                        {
+                            var action = (row.ActionType ?? string.Empty).ToLowerInvariant();
+                            var knownAction = actionLabels.ContainsKey(action);
+                            var actionClass = knownAction ? "action-" + action : string.Empty;
+                            var actionLabel = knownAction ? actionLabels[action] : row.ActionType;
+                            <tr>
+                                <td class="home-time-cell">@row.CreatedDtText</td>
+                                <td><strong>@row.Username</strong></td>
+                                <td><span class="badge @actionClass">@actionLabel</span></td>
+                                <td>@row.ActionDetail</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</section>

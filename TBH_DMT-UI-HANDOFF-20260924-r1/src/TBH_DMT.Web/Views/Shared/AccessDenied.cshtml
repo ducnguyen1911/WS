@@ -1,0 +1,15 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Không có quyền truy cập";
+    ViewBag.PageTitle = "Không có quyền truy cập";
+}
+@section Styles {
+    <link rel="stylesheet" href="@Url.Content("~/Content/admin/admin.css?v=20260913a")" />
+}
+
+<section class="app-page admin-page narrow">
+<div class="app-surface app-surface-soft app-form-surface access-denied-card">
+        <div class="admin-alert error">Bạn không có quyền truy cập chức năng này. Liên hệ Admin nếu cần được cấp quyền.</div>
+        <a class="admin-btn secondary" href="@Url.Action("Index", "Home")">Về trang chủ</a>
+    </div>
+</section>

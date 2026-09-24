@@ -1,0 +1,294 @@
+@using TBH_DMT.Web.Infrastructure
+@{
+    var tbhUser = User as TbhPrincipal;
+    var controllerName = Convert.ToString(ViewContext.RouteData.Values["controller"]);
+    var actionName = Convert.ToString(ViewContext.RouteData.Values["action"]);
+    var isAdminPage = controllerName == "AdminUser" || controllerName == "AuditLog";
+    var isBaoCaoPage = controllerName == "BaoCao";
+    var isAccountPage = controllerName == "Account";
+    var isHomePage = controllerName == "Home";
+    var isHieuQuaPage = controllerName == "HieuQuaDon";
+    var canSeeBaoCao = User.IsInRole("ADMIN") || User.IsInRole("EDITOR");
+    var breadcrumbGroup = isAdminPage ? "Quản trị" : (isBaoCaoPage ? "Báo cáo" : (isAccountPage ? "Tài khoản" : "Công cụ"));
+    var displayName = tbhUser == null ? User.Identity.Name : tbhUser.FullName;
+    var avatarInitial = string.IsNullOrWhiteSpace(displayName) ? "U" : displayName.Trim().Substring(0, 1).ToUpperInvariant();
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(ViewBag.Title ?? "Quản lý Dữ liệu Tái Bảo Hiểm") - Bảo Việt</title>
+    <link rel="stylesheet" href="@Url.Content("~/Content/design-tokens.css?v=20260909a")" />
+    <link rel="stylesheet" href="@Url.Content("~/Content/shell.css?v=20260914b")" />
+    <link rel="stylesheet" href="@Url.Content("~/Content/app-components.css?v=20260909a")" />
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <div id="toast-container" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
+    <header class="bv-header site-header">
+        <div class="site-header-inner">
+            <a class="bv-brand-link" href="@Url.Action("Index", "Home")" title="Về trang chủ">
+                <div class="bv-brand">
+                    <span class="bv-brand-logo-frame">
+                        <img class="bv-brand-logo" src="@Url.Content("~/Content/images/baoviet-insurance-logo.png?v=20260908e")" alt="Bảo Việt Insurance" />
+                    </span>
+                </div>
+            </a>
+            <div class="bv-brand-system" aria-label="Tên hệ thống">
+                <div class="bv-brand-title">Hệ thống Quản lý Dữ liệu Tái Bảo Hiểm</div>
+            </div>
+            <div class="bv-header-right">
+                <button type="button" id="shell-menu-toggle" class="bv-header-btn shell-menu-toggle" aria-controls="shell-sidebar" aria-expanded="false" aria-label="Mở danh mục">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
+                </button>
+                <span class="bv-user-avatar" aria-hidden="true">@avatarInitial</span>
+                <div class="bv-user">
+                    <div class="bv-user-name">@displayName</div>
+                    <div class="bv-user-role">Vai trò: @(tbhUser == null ? "" : tbhUser.RoleCode)</div>
+                </div>
+                @using (Html.BeginForm("Logout", "Account", FormMethod.Post, new { id = "shell-logout-form" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <button type="submit" id="shell-logout-btn" class="bv-logout-btn" title="Đăng xuất" aria-label="Đăng xuất">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+                    </button>
+                }
+            </div>
+        </div>
+    </header>
+
+    <nav class="shell-breadcrumb" aria-label="Breadcrumb">
+        @if (isHomePage)
+        {
+            <span>Trang chủ</span>
+        }
+        else
+        {
+            <a href="@Url.Action("Index", "Home")">Trang chủ</a>
+            <span aria-hidden="true">&gt;</span>
+            <span>@breadcrumbGroup</span>
+            <span aria-hidden="true">&gt;</span>
+            <span>@(ViewBag.PageTitle ?? ViewBag.Title)</span>
+        }
+    </nav>
+
+    <div class="shell-container">
+        <aside id="shell-sidebar" class="shell-sidebar" aria-label="Danh mục báo cáo" tabindex="-1">
+            <div class="shell-sidebar-head">
+                <a class="shell-sidebar-home" href="@Url.Action("Index", "Home")" title="Về trang chủ" aria-current="@(isHomePage ? "page" : null)">
+                    <span class="shell-sidebar-logo-icon" aria-hidden="true">BV</span>
+                    <span class="shell-sidebar-logo-text">Trang chủ</span>
+                </a>
+            </div>
+
+            <div class="shell-sidebar-nav">
+            <div class="shell-group @(isHieuQuaPage ? "" : "is-closed")">
+                <button type="button" class="shell-group-head" data-group="main" data-abbr="CC" aria-expanded="@(isHieuQuaPage ? "true" : "false")">
+                    <span class="shell-group-label">Công cụ</span>
+                    <svg class="shell-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                </button>
+                <div class="shell-group-items" data-group-items="main">
+                    <a class="shell-nav-item @(isHieuQuaPage ? "active" : "")" href="@Url.Action("Search", "HieuQuaDon")" data-tip="Tính hiệu quả">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v18h18" /><path d="m7 16 4-5 4 3 5-7" /></svg>
+                        <span>Tính hiệu quả</span>
+                    </a>
+                </div>
+            </div>
+
+            @if (canSeeBaoCao)
+            {
+                <div class="shell-group @(isBaoCaoPage ? "" : "is-closed")">
+                    <button type="button" class="shell-group-head" data-group="baocao" data-abbr="BC" aria-expanded="@(isBaoCaoPage ? "true" : "false")">
+                        <span class="shell-group-label">Báo cáo</span>
+                        <svg class="shell-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                    </button>
+                    <div class="shell-group-items" data-group-items="baocao">
+                        <a class="shell-nav-item @(isBaoCaoPage && actionName == "PremiumBorderaux" ? "active" : "")" href="@Url.Action("PremiumBorderaux", "BaoCao")" data-tip="Premium Borderaux">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><path d="M14 2v6h6" /><line x1="8" y1="13" x2="16" y2="13" /><line x1="8" y1="17" x2="16" y2="17" /></svg>
+                            <span>Premium Borderaux</span>
+                        </a>
+                        <a class="shell-nav-item @(isBaoCaoPage && actionName == "PaidBorderaux" ? "active" : "")" href="@Url.Action("PaidBorderaux", "BaoCao")" data-tip="Paid Borderaux">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M7 10h10M7 14h4" /></svg>
+                            <span>Paid Borderaux</span>
+                        </a>
+                        <a class="shell-nav-item @(isBaoCaoPage && actionName == "OscBorderaux" ? "active" : "")" href="@Url.Action("OscBorderaux", "BaoCao")" data-tip="OSC Borderaux">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M8 13l2 2 5-5" /></svg>
+                            <span>OSC Borderaux</span>
+                            <span class="shell-nav-badge shell-nav-badge-soon" aria-label="Sắp ra mắt">Sắp ra mắt</span>
+                        </a>
+                        <a class="shell-nav-item @(isBaoCaoPage && actionName == "LossProfileNonCat" ? "active" : "")" href="@Url.Action("LossProfileNonCat", "BaoCao")" data-tip="Loss Profile (Non Cat)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" /><path d="M12 9v4M12 17h.01" /></svg>
+                            <span>Loss Profile (Non Cat)</span>
+                            <span class="shell-nav-badge shell-nav-badge-soon" aria-label="Sắp ra mắt">Sắp ra mắt</span>
+                        </a>
+                        <a class="shell-nav-item @(isBaoCaoPage && actionName == "RiskProfile" ? "active" : "")" href="@Url.Action("RiskProfile", "BaoCao")" data-tip="Risk Profile">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3 20 6v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-3z" /></svg>
+                            <span>Risk Profile</span>
+                            <span class="shell-nav-badge shell-nav-badge-soon" aria-label="Sắp ra mắt">Sắp ra mắt</span>
+                        </a>
+                    </div>
+                </div>
+            }
+
+            @if (User.IsInRole("ADMIN"))
+            {
+                <div class="shell-group @(isAdminPage ? "" : "is-closed")">
+                    <button type="button" class="shell-group-head" data-group="admin" data-abbr="QT" aria-expanded="@(isAdminPage ? "true" : "false")">
+                        <span class="shell-group-label">Quản trị</span>
+                        <svg class="shell-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                    </button>
+                    <div class="shell-group-items" data-group-items="admin">
+                    <a class="shell-nav-item @(controllerName == "AdminUser" ? "active" : "")" href="@Url.Action("List", "AdminUser")" data-tip="Quản lý người dùng">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" /></svg>
+                        <span>Quản lý người dùng</span>
+                    </a>
+                    <a class="shell-nav-item @(controllerName == "AuditLog" ? "active" : "")" href="@Url.Action("List", "AuditLog")" data-tip="Nhật ký hệ thống">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5M12 7v5l3 2" /></svg>
+                        <span>Nhật ký hệ thống</span>
+                    </a>
+                    </div>
+                </div>
+            }
+            <div class="shell-group @(isAccountPage ? "" : "is-closed")">
+                <button type="button" class="shell-group-head" data-group="user" data-abbr="TK" aria-expanded="@(isAccountPage ? "true" : "false")">
+                    <span class="shell-group-label">Tài khoản</span>
+                    <svg class="shell-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                </button>
+                <div class="shell-group-items" data-group-items="user">
+                    <a class="shell-nav-item @(isAccountPage ? "active" : "")" href="@Url.Action("ChangePassword", "Account")" data-tip="Đổi mật khẩu">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="15" r="4" /><path d="m11 12 8-8M15 4l2 2M14 9l2 2" /></svg>
+                        <span>Đổi mật khẩu</span>
+                    </a>
+                </div>
+            </div>
+            </div>
+
+            <div class="shell-sidebar-footer">
+                <button type="button" id="shell-sidebar-collapse" class="shell-sidebar-collapse" aria-controls="shell-sidebar" aria-expanded="true" aria-label="Thu gọn sidebar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+                    <span id="shell-sidebar-collapse-label">Thu gọn</span>
+                </button>
+            </div>
+        </aside>
+
+        <div id="shell-sidebar-overlay" class="shell-sidebar-overlay" hidden aria-hidden="true"></div>
+
+        <main class="shell-main">
+            @if (ViewBag.HidePageHeader != true)
+            {
+                <div class="shell-main-head">
+                    <span class="accent" aria-hidden="true"></span>
+                    <span class="shell-main-head-title">@(ViewBag.PageTitle ?? ViewBag.Title)</span>
+                </div>
+            }
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="shell-footer">
+        <div class="shell-footer-top">
+            <div class="shell-footer-top-inner">
+                <div class="shell-footer-brand">
+                    <span class="shell-footer-logo-frame">
+                        <img class="shell-footer-logo" src="@Url.Content("~/Content/images/baoviet-insurance-logo.png?v=20260908e")" alt="Bảo Việt Insurance" />
+                    </span>
+                    <div>
+                        <div class="shell-footer-brand-title">TỔNG CÔNG TY BẢO HIỂM BẢO VIỆT</div>
+                        <div class="shell-footer-brand-sub">Là một thành viên thuộc Tập đoàn Bảo Việt</div>
+                    </div>
+                </div>
+                <div class="shell-footer-address">
+                    <div>Số 7 Lý Thường Kiệt, Phường Cửa Nam, Hà Nội</div>
+                    <div>Hotline: 1800 1118 | Email: insurancehelp@baoviet.com.vn</div>
+                </div>
+            </div>
+        </div>
+        <div class="shell-footer-bottom">
+            <span class="shell-footer-copyright">© 2026 Tổng Công ty Bảo hiểm Bảo Việt. Hệ thống Quản lý Dữ liệu Tái Bảo Hiểm</span>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            document.querySelectorAll('.shell-group-head').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var group = btn.closest('.shell-group');
+                    var closed = group.classList.toggle('is-closed');
+                    btn.setAttribute('aria-expanded', String(!closed));
+                });
+            });
+            var menuToggle = document.getElementById('shell-menu-toggle');
+            var sidebar = document.getElementById('shell-sidebar');
+            var collapseToggle = document.getElementById('shell-sidebar-collapse');
+            var collapseLabel = document.getElementById('shell-sidebar-collapse-label');
+            var sidebarOverlay = document.getElementById('shell-sidebar-overlay');
+            var mobileMedia = window.matchMedia('(max-width: 900px)');
+
+            function setSidebarCollapsed(collapsed, persist) {
+                sidebar.classList.toggle('is-collapsed', collapsed);
+                collapseToggle.setAttribute('aria-expanded', String(!collapsed));
+                collapseToggle.setAttribute('aria-label', collapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar');
+                collapseLabel.textContent = collapsed ? 'Mở rộng' : 'Thu gọn';
+                if (persist) {
+                    try { localStorage.setItem('sidebar-collapsed', collapsed ? '1' : '0'); } catch (error) { }
+                }
+            }
+
+            function sidebarFocusable() {
+                return sidebar.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+            }
+
+            function setSidebarOpen(open, restoreFocus) {
+                if (!mobileMedia.matches) open = false;
+                sidebar.classList.toggle('is-open', open);
+                sidebarOverlay.hidden = !open;
+                menuToggle.setAttribute('aria-expanded', String(open));
+                menuToggle.setAttribute('aria-label', open ? 'Đóng danh mục' : 'Mở danh mục');
+                document.body.classList.toggle('shell-nav-open', open);
+                if (mobileMedia.matches) sidebar.setAttribute('aria-hidden', String(!open));
+                else sidebar.removeAttribute('aria-hidden');
+                if (open) {
+                    var active = sidebar.querySelector('.shell-nav-item.active');
+                    (active || sidebar).focus();
+                } else if (restoreFocus) {
+                    menuToggle.focus();
+                }
+            }
+
+            function syncSidebarMode() {
+                setSidebarOpen(false, false);
+                if (!mobileMedia.matches) sidebar.removeAttribute('aria-hidden');
+            }
+
+            menuToggle.addEventListener('click', function () {
+                setSidebarOpen(!sidebar.classList.contains('is-open'), false);
+            });
+            collapseToggle.addEventListener('click', function () {
+                setSidebarCollapsed(!sidebar.classList.contains('is-collapsed'), true);
+            });
+            sidebarOverlay.addEventListener('click', function () { setSidebarOpen(false, true); });
+            sidebar.querySelectorAll('a').forEach(function (link) {
+                link.addEventListener('click', function () { if (mobileMedia.matches) setSidebarOpen(false, false); });
+            });
+            document.addEventListener('keydown', function (event) {
+                if (!mobileMedia.matches || !sidebar.classList.contains('is-open')) return;
+                if (event.key === 'Escape') { event.preventDefault(); setSidebarOpen(false, true); return; }
+                if (event.key !== 'Tab') return;
+                var focusable = Array.prototype.slice.call(sidebarFocusable());
+                if (!focusable.length) { event.preventDefault(); sidebar.focus(); return; }
+                var first = focusable[0]; var last = focusable[focusable.length - 1];
+                if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+                else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+            });
+            if (mobileMedia.addEventListener) mobileMedia.addEventListener('change', syncSidebarMode);
+            else mobileMedia.addListener(syncSidebarMode);
+            var savedSidebarState = null;
+            try { savedSidebarState = localStorage.getItem('sidebar-collapsed'); } catch (error) { }
+            setSidebarCollapsed(savedSidebarState === '1', false);
+            syncSidebarMode();
+        })();
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

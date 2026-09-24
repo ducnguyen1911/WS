@@ -1,0 +1,18 @@
+@model IEnumerable<TBH_DMT.Web.Models.ViewModels.PolicySearchResultViewModel>
+@foreach (var row in Model)
+{
+    <tr>
+        <td class="center"><input type="checkbox" class="hqd-cb" /></td>
+        <td class="policy-number">@row.SoDon</td>
+        <td>@row.NgayHieuLuc</td>
+        <td>@row.NhomNghiepVu</td>
+        <td>@row.TenSanPhamGoc</td>
+        <td class="center"><span class="status-pill">@row.TrangThaiRutGon</span></td>
+        @for (var index = 0; index < 10; index++)
+        {
+            <td class="right placeholder">—</td>
+        }
+        <td>@(string.IsNullOrWhiteSpace(row.Cat) ? "—" : row.Cat)</td>
+        <td>@(string.IsNullOrWhiteSpace(row.NganhNghe) ? "—" : row.NganhNghe)</td>
+    </tr>
+}

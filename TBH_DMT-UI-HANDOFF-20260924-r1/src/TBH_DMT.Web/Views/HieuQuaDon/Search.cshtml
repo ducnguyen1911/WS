@@ -1,0 +1,209 @@
+@model TBH_DMT.Web.Models.ViewModels.PolicySearchViewModel
+@using System.Web.Helpers
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Tìm kiếm đơn phát sinh";
+    ViewBag.PageTitle = "Hiệu quả nghiệp vụ tái";
+    var cttvJson = HttpUtility.JavaScriptStringEncode(Json.Encode(Model.CttvOptions), true);
+    var nganhFireJson = HttpUtility.JavaScriptStringEncode(Json.Encode(Model.NganhNgheFireOptions), true);
+    var nganhEngineeringJson = HttpUtility.JavaScriptStringEncode(Json.Encode(Model.NganhNgheEngineeringOptions), true);
+    var currentYear = DateTime.Now.Year;
+}
+@section Styles {
+    <link rel="stylesheet" href="@Url.Content("~/Content/hieuquadon/search.css?v=20260919a")" />
+}
+
+    <main class="app-page page-shell">
+<section class="feature-card search-card" aria-labelledby="search-title">
+            <div class="section-head">
+                <span class="search-mark" aria-hidden="true"></span>
+                <h2 id="search-title">Tham số tìm kiếm đơn phát sinh</h2>
+            </div>
+
+            <form id="policy-search-form" action="@Url.Action("SearchPolicies", "HieuQuaDon")" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <div id="hqd-search-params" class="search-grid">
+                    <div class="field field-cttv custom-select-wrap">
+                        <label id="hqd-cttv-title">Công ty thành viên <small>(không chọn = tất cả)</small></label>
+                        <button type="button" id="hqd-cttv-btn" class="input-control select-button" aria-labelledby="hqd-cttv-title hqd-cttv-label" aria-controls="hqd-cttv-drop" aria-expanded="false">
+                            <span id="hqd-cttv-label">-- Tất cả CTTV --</span><svg class="dropdown-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m1 1 4 4 4-4" /></svg>
+                        </button>
+                        <div id="hqd-cttv-drop" class="custom-menu" hidden>
+                            <div class="menu-search"><input id="hqd-cttv-search" type="search" placeholder="Gõ tên công ty để lọc..." /></div>
+                            <div id="hqd-cttv-list" class="menu-list"></div>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(Model.CttvLookupError))
+                        {
+                            <span class="lookup-error">@Model.CttvLookupError</span>
+                        }
+                    </div>
+
+                    <div class="field field-ri">
+                        <label for="hqd-riclass">Nghiệp vụ <span id="hqd-riclass-required-mark" class="required">*</span></label>
+                        <select id="hqd-riclass" name="RiClass" class="input-control" aria-describedby="hqd-riclass-error" required>
+                            <option value="" disabled selected>-- Chọn nghiệp vụ --</option>
+                            <option value="Fire">Fire</option><option value="Hull">Hull</option>
+                            <option value="Engineering">Engineering</option><option value="Cargo">Cargo</option>
+                            <option value="Miscellaneous">Miscellaneous</option>
+                        </select>
+                        <div id="hqd-riclass-error" class="validation-error" role="alert" hidden>Vui lòng chọn Nghiệp vụ</div>
+                    </div>
+
+                    <div class="field field-policy">
+                        <label for="hqd-sodon">Số đơn</label>
+                        <input id="hqd-sodon" name="SoDon" type="text" class="input-control" placeholder="Nhập số đơn" />
+                    </div>
+
+                    <div class="date-grid">
+                        <div class="field"><label for="hqd-year">Chọn năm</label>
+                            <select id="hqd-year" class="input-control"><option value="">-- Tự chọn ngày --</option>@for (var year = currentYear; year >= currentYear - 4; year--){<option value="@year">@year</option>}</select>
+                        </div>
+                        <div class="field"><label for="hqd-quarter">Quý</label>
+                            <select id="hqd-quarter" class="input-control"><option value="">Cả năm</option><option value="1">Quý 1</option><option value="2">Quý 2</option><option value="3">Quý 3</option><option value="4">Quý 4</option></select>
+                        </div>
+                        <div class="field hqd-date-field"><label for="hqd-from-display">Từ ngày <span id="hqd-from-required-mark" class="required">*</span></label>
+                            <div class="hqd-date-control">
+                                <input id="hqd-from-display" type="text" class="input-control hqd-date-display" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="hqd-from-error hqd-range-error hqd-range-hint" required />
+                                <input id="hqd-from" name="NgayHieuLucFrom" type="date" class="hqd-date-picker" min="1900-01-01" max="9999-12-31" aria-label="Chọn Từ ngày bằng lịch" />
+                            </div>
+                        </div>
+                        <div class="field hqd-date-field"><label for="hqd-to-display">Đến ngày</label>
+                            <div class="hqd-date-control">
+                                <input id="hqd-to-display" type="text" class="input-control hqd-date-display" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="hqd-range-error hqd-range-hint" />
+                                <input id="hqd-to" name="NgayHieuLucTo" type="date" class="hqd-date-picker" min="1900-01-01" max="9999-12-31" aria-label="Chọn Đến ngày bằng lịch" />
+                            </div>
+                        </div>
+                        <div id="hqd-from-error" class="validation-error" role="alert" aria-live="assertive" hidden>Vui lòng chọn Từ ngày hiệu lực</div>
+                        <div id="hqd-range-error" class="validation-error" role="alert" aria-live="assertive" hidden>Vui lòng thu hẹp khoảng ngày về tối đa 1 năm</div>
+                        <div id="hqd-range-hint" class="field-help date-help" role="status" aria-live="polite">Khoảng tìm kiếm tối đa 1 năm; riêng Cargo tối đa 1 quý nếu không chọn đúng 1 CTTV.</div>
+                    </div>
+
+                    <div id="hqd-cat-wrap" class="field field-cat disabled-field">
+                        <label for="hqd-cat">Nhóm rủi ro <small>(Fire/Engineering)</small></label>
+                        <select id="hqd-cat" name="Cat" class="input-control" disabled>
+                            <option value="">-- Tất cả --</option>
+                            <option value="1">CAT 1</option><option value="2">CAT 2</option><option value="3">CAT 3</option>
+                            <option value="4">CAT 4</option><option value="5">CAT 5</option><option value="6">CAT 6</option><option value="7">CAT 7</option>
+                        </select>
+                    </div>
+
+                    <div id="hqd-nganh-wrap" class="field field-industry custom-select-wrap disabled-field">
+                        <label>Ngành nghề kinh doanh <small>(Fire/Engineering)</small></label>
+                        <input id="hqd-nganh" name="NganhNghe" type="hidden" />
+                        <button type="button" id="hqd-nganh-btn" class="input-control select-button" disabled aria-expanded="false">
+                            <span id="hqd-nganh-label">-- Tất cả ngành nghề --</span><svg class="dropdown-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m1 1 4 4 4-4" /></svg>
+                        </button>
+                        <div id="hqd-nganh-drop" class="custom-menu" hidden>
+                            <div class="menu-search"><input id="hqd-nganh-search" type="search" placeholder="Gõ tên ngành nghề để lọc..." /></div>
+                            <div id="hqd-nganh-list" class="menu-list"></div>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(Model.NganhNgheLookupError))
+                        {
+                            <span class="lookup-error">@Model.NganhNgheLookupError</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="action-bar-wrap">
+                    <div class="action-bar">
+                        <button type="button" id="hqd-reset-btn" class="bv-btn secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 4v6h6" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>Đặt lại bộ lọc</button>
+                        <button type="submit" id="hqd-search-btn" class="bv-btn primary"><svg id="hqd-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>Tìm kiếm</button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <section id="hqd-search-wrap" class="feature-card results-card" hidden aria-labelledby="result-title">
+            <div class="section-head result-head">
+                <h2 id="result-title">Kết quả tìm kiếm — Chọn đơn để tính hiệu quả</h2>
+                <div class="result-head-right">
+                    <span class="unit-note">Đơn vị tính: <strong>VND</strong></span>
+                    <button type="button" id="hqd-export-btn" class="bv-btn success" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><path d="M14 2v6h6" /><path d="M8 13h2M8 17h2M12 13h2M12 17h2" /></svg>Xuất Excel</button>
+                </div>
+            </div>
+            <div class="calc-toolbar-row">
+                <div class="calc-toolbar">
+                    <div class="calc-toolbar-fx">
+                        <div class="calc-toolbar-label">
+                            <label for="hqd-fx">Tỷ giá <span class="required">*</span></label>
+                            <span class="unit-note">VND / 1 USD</span>
+                        </div>
+                        <input id="hqd-fx" type="number" min="0" step="any" placeholder="VD: 20828" />
+                    </div>
+                    <button type="button" id="hqd-calc-btn" class="bv-btn success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2" /><line x1="8" y1="6" x2="16" y2="6" /><line x1="8" y1="10" x2="16" y2="10" /></svg>Tính toán</button>
+                </div>
+            </div>
+            <div id="hqd-selection-summary" class="selection-summary" role="status" aria-live="polite" hidden></div>
+            <div class="table-scroll">
+                <table class="result-table">
+                    <thead><tr>
+                        <th class="center"><input type="checkbox" id="hqd-checkall" aria-label="Chọn toàn bộ kết quả theo bộ lọc hiện tại" aria-describedby="hqd-selection-summary" /></th>
+                        <th>Số đơn</th><th>Ngày hiệu lực</th><th>Nhóm nghiệp vụ</th><th>Sản phẩm gốc</th><th class="center">Trạng thái</th>
+                        <th class="right">Phí gốc 100%</th><th class="right">Tỷ lệ đồng</th><th class="right">Phí ĐBH của BV</th>
+                        <th class="right">Phí nhượng tái</th><th class="right">Phí giữ lại</th><th class="right">Bồi thường Gốc</th>
+                        <th class="right">Bồi thường giữ lại</th><th class="right">Tổng thu đòi BT</th><th class="right">Phí tái lập</th><th class="right">Hiệu quả</th>
+                        <th>Cat</th><th>Ngành nghề</th><th>Công ty thành viên</th>
+                    </tr></thead>
+                    <tbody id="hqd-search-body"></tbody>
+                </table>
+            </div>
+            <div id="hqd-search-empty" class="empty-state">Nhấn "Tìm kiếm" để hiển thị danh sách đơn phát sinh</div>
+            <div id="hqd-pagination-wrap" class="pagination-wrap" hidden>
+                <div class="page-summary"><span>Số kết quả mỗi trang</span>
+                    <select id="hqd-page-size"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option></select>
+                    <span id="hqd-result-text"></span>
+                </div>
+                <div id="hqd-pagination-buttons" class="pagination-buttons"></div>
+            </div>
+        </section>
+    </main>
+
+    <div id="hqd-drawer-overlay" class="drawer-overlay hidden" aria-hidden="true"></div>
+    <aside id="hqd-drawer" class="hqd-drawer" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="hqd-drawer-title" tabindex="-1">
+        <div class="drawer-header bv-header">
+            <div class="drawer-title-wrap">
+                <button type="button" id="hqd-drawer-prev" class="drawer-icon" title="Đơn trước" aria-label="Đơn trước"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg></button>
+                <button type="button" id="hqd-drawer-next" class="drawer-icon" title="Đơn sau" aria-label="Đơn sau"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg></button>
+                <div><div id="hqd-drawer-title" class="drawer-title">Đơn <span id="hqd-dw-sodon"></span></div><div id="hqd-dw-sub" class="drawer-subtitle"></div></div>
+            </div>
+            <div class="drawer-actions">
+                <div class="drawer-eff"><small>Hiệu quả dịch vụ</small><strong id="hqd-dw-eff">—</strong></div>
+                <button type="button" id="hqd-drawer-export" class="drawer-icon drawer-export" title="Xuất Excel đơn này" aria-label="Xuất Excel đơn này"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg></button>
+                <button type="button" id="hqd-drawer-close" class="drawer-icon drawer-close" title="Đóng" aria-label="Đóng">×</button>
+            </div>
+        </div>
+        <nav class="drawer-tabs" role="tablist" aria-label="Nội dung chi tiết đơn">
+            <button type="button" class="hqd-dtab active" data-tab="tq" role="tab" aria-selected="true">Tổng quan</button>
+            <button type="button" class="hqd-dtab" data-tab="struct" role="tab" aria-selected="false" tabindex="-1">Cấu trúc tái</button>
+            <button type="button" class="hqd-dtab" data-tab="claim" role="tab" aria-selected="false" tabindex="-1">Bồi thường</button>
+            <button type="button" class="hqd-dtab" data-tab="steps" role="tab" aria-selected="false" tabindex="-1">Hiệu quả dịch vụ</button>
+        </nav>
+        <div id="hqd-drawer-body" class="drawer-body"></div>
+    </aside>
+
+@section Scripts {
+    <script>
+        window.TBH_POLICY_SEARCH = {
+            cttvOptions: JSON.parse(@Html.Raw(cttvJson)),
+            nganhNgheFireOptions: JSON.parse(@Html.Raw(nganhFireJson)),
+            nganhNgheEngineeringOptions: JSON.parse(@Html.Raw(nganhEngineeringJson)),
+            urls: {
+                tinhToan: '@Url.Action("TinhToan", "HieuQuaDon")',
+                status: '@Url.Action("GetTinhToanStatus", "HieuQuaDon")',
+                cancelTinhToan: '@Url.Action("CancelTinhToan", "HieuQuaDon")',
+                result: '@Url.Action("GetTinhToanResult", "HieuQuaDon")',
+                resultPage: '@Url.Action("GetTinhToanResultPage", "HieuQuaDon")',
+                export: '@Url.Action("GetTinhToanExport", "HieuQuaDon")',
+                recompressExcel: '@Url.Action("RecompressExcel", "HieuQuaDon")',
+                exportTemplate: '@Url.Content("~/Content/templates/hieu-qua-don-phat-sinh-template.xlsx?v=20260919b")',
+                cauTrucTai: '@Url.Action("GetCauTrucTai", "HieuQuaDon")',
+                boiThuong: '@Url.Action("GetBoiThuong", "HieuQuaDon")',
+                xolLayers: '@Url.Action("GetXolLayers", "HieuQuaDon")'
+            }
+        };
+    </script>
+    <script src="@Url.Content("~/Scripts/hieuquadon/operation-timer.js?v=20260910a")"></script>
+    <script src="@Url.Content("~/Scripts/hieuquadon/search.js?v=20260919b")"></script>
+    <script src="@Url.Content("~/Scripts/vendor/xlsx.full.min.js?v=20260903")"></script>
+    <script src="@Url.Content("~/Scripts/hieuquadon/hieuqua-calc.js?v=20260919b")"></script>
+}

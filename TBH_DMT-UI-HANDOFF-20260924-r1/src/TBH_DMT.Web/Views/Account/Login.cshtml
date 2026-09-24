@@ -1,0 +1,58 @@
+@model TBH_DMT.Web.Models.Requests.LoginRequest
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Đăng nhập - Quản lý Dữ liệu Tái Bảo Hiểm</title>
+    <link rel="stylesheet" href="@Url.Content("~/Content/design-tokens.css?v=20260909a")" />
+    <link rel="stylesheet" href="@Url.Content("~/Content/admin/admin.css?v=20260909a")" />
+</head>
+<body class="admin-login-body">
+    <main class="login-stage" aria-labelledby="login-title">
+        <section class="login-card">
+            <div class="login-card-accent" aria-hidden="true"></div>
+            <header class="login-card-head">
+                <img class="login-brand-logo" src="@Url.Content("~/Content/images/baoviet-insurance-logo.png?v=20260908e")" alt="Bảo Việt Insurance" />
+                <h1 id="login-title">Hệ thống Quản lý Dữ liệu Tái Bảo Hiểm</h1>
+            </header>
+            <form id="login-form" class="login-form" method="post" action="@Url.Action("Login", "Account")" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+                <label class="admin-field">
+                    <span>Tên đăng nhập</span>
+                    <input name="Username" type="text" autocomplete="username" placeholder="Nhập tên đăng nhập" required autofocus />
+                </label>
+                <div class="admin-field">
+                    <label for="login-password">Mật khẩu</label>
+                    <span class="password-control"><input id="login-password" name="Password" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu" aria-describedby="login-caps-lock" required /><button type="button" class="password-toggle" data-password-target="login-password" aria-label="Hiện mật khẩu" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" /><circle cx="12" cy="12" r="3" /></svg></button></span>
+                    <small id="login-caps-lock" class="password-hint warning" role="status" hidden>Caps Lock đang bật.</small>
+                </div>
+                <div id="login-error" class="admin-alert error login-error" role="alert" aria-live="assertive" hidden>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                    <span><strong>Đăng nhập không thành công</strong><span data-login-error-message></span></span>
+                </div>
+                <button id="login-submit" type="submit" class="admin-btn primary full">Đăng nhập</button>
+                <p class="login-card-copyright">© 2026 Tổng Công ty Bảo hiểm Bảo Việt</p>
+            </form>
+        </section>
+    </main>
+    <footer class="login-footer">
+        <div class="login-footer-main">
+            <div>
+                <div class="login-footer-title">TỔNG CÔNG TY BẢO HIỂM BẢO VIỆT</div>
+                <div class="login-footer-subtitle">Là một thành viên thuộc Tập đoàn Bảo Việt</div>
+            </div>
+            <div class="login-footer-address">
+                <div>Số 7 Lý Thường Kiệt, Phường Cửa Nam, Hà Nội</div>
+                <div>Hotline: 1800 1118 | Email: insurancehelp@baoviet.com.vn</div>
+            </div>
+        </div>
+        <div class="login-footer-bottom">© 2026 Tổng Công ty Bảo hiểm Bảo Việt, Hệ thống Quản lý Dữ liệu Tái Bảo Hiểm</div>
+    </footer>
+    <script src="@Url.Content("~/Scripts/admin/login.js?v=20260919a")"></script>
+</body>
+</html>
